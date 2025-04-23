@@ -10,4 +10,4 @@ beautifulsoup4
 requests
 nltk
 plotly
-talib
+TA-Lib
