@@ -18,4 +18,4 @@ nltk
 urllib
 datetime
 plotly
-tablis
+talib
