@@ -1150,15 +1150,28 @@ def run_sp500_comparison_analysis(df, company):
             drawdown = (cumulative - peak) / peak
             max_drawdown = drawdown.min()
             
-            # 4. Current Technicals - RSI (using pandas-ta)
-            import pandas_ta as ta
-            rsi_values = ta.rsi(stock['Close'], length=14)
-            
-            # Handle potential None return from RSI calculation
-            if rsi_values is None or len(rsi_values) == 0:
-                current_rsi = 50.0  # Default neutral value
-            else:
-                current_rsi = rsi_values.iloc[-1]
+            # 4. Current Technicals - RSI (with fallback implementation)
+            current_rsi = 50.0  # Default neutral value
+            try:
+                import pandas_ta as ta
+                rsi_values = ta.rsi(stock['Close'], length=14)
+                if rsi_values is not None and len(rsi_values) > 0:
+                    current_rsi = rsi_values.iloc[-1]
+            except ImportError:
+                # Fallback RSI calculation if pandas_ta not available
+                try:
+                    delta = stock['Close'].diff()
+                    gain = delta.where(delta > 0, 0)
+                    loss = -delta.where(delta < 0, 0)
+                    
+                    avg_gain = gain.rolling(window=14).mean()
+                    avg_loss = loss.rolling(window=14).mean()
+                    
+                    rs = avg_gain / avg_loss
+                    rsi_values = 100 - (100 / (1 + rs))
+                    current_rsi = rsi_values.iloc[-1] if not rsi_values.empty else 50.0
+                except Exception:
+                    current_rsi = 50.0
             
             # 5. Relative Strength
             if len(stock['Close']) >= 252 and len(sp500['Close']) >= 252:
