@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller
 from sklearn.preprocessing import MinMaxScaler
@@ -23,8 +23,8 @@ from urllib.request import urlopen, Request
 from datetime import datetime, date, timedelta
 import plotly.graph_objects as go
 import matplotlib.dates as mdates
-from talib import RSI
-
+#from talib import RSI
+import pandas_ta as ta
 
 
 
@@ -939,7 +939,171 @@ def run_advanced_behavioral_analysis(ticker, company_name):
 # END OF NEW FUNCTION
 # ===========================================
 
-def run_sp500_comparison_analysis(df,company):
+    st.metric("Investment Decision", decision, delta="Recommendation")
+# def run_sp500_comparison_analysis(df,company):
+#     """Run complete S&P 500 comparison analysis for the dashboard"""
+#     st.subheader("📊 S&P 500 Comparative Analysis (5 Years)")
+    
+#     ticker = 'AAPL' if company == "Apple" else 'GOOGL'
+    
+#     with st.spinner(f'Fetching 5 years of historical data for {company}...'):
+#         try:
+#             # Configuration
+#             end_date = datetime.today()
+#             start_date = end_date - timedelta(days=5*365)  # 5 years of data
+
+#             # Fetch data
+#             data = {}
+#             data['sp500'] = yf.download("^GSPC", start=start_date, end=end_date)
+#             data[ticker] = yf.download(ticker, start=start_date, end=end_date)
+            
+#             # Calculate daily returns
+#             data[ticker]['Daily_Return'] = data[ticker]['Close'].pct_change()
+#             data['sp500']['Daily_Return'] = data['sp500']['Close'].pct_change()
+
+#             # Calculate metrics
+#             stock = data[ticker]
+#             sp500 = data['sp500']
+            
+#             # 1. Annualized Returns
+#             stock_returns = stock['Daily_Return'].dropna()
+#             sp500_returns = sp500['Daily_Return'].dropna()
+#             stock_annual_return = (1 + stock_returns.mean())**252 - 1
+#             sp500_annual_return = (1 + sp500_returns.mean())**252 - 1
+            
+#             # 2. Risk-Adjusted Returns (Sharpe Ratio)
+#             risk_free_rate = 0.02
+#             stock_sharpe = (stock_annual_return - risk_free_rate) / (stock_returns.std() * np.sqrt(252))
+#             sp500_sharpe = (sp500_annual_return - risk_free_rate) / (sp500_returns.std() * np.sqrt(252))
+            
+#             # 3. Maximum Drawdown
+#             cumulative = (1 + stock_returns).cumprod()
+#             peak = cumulative.cummax()
+#             drawdown = (cumulative - peak) / peak
+#             max_drawdown = drawdown.min()
+            
+#             # 4. Current Technicals - RSI
+#             close_prices = stock['Close'].values.flatten()
+#             rsi_values = RSI(close_prices, timeperiod=14)
+#             current_rsi = rsi_values[-1] if len(rsi_values) > 0 else 50.0
+            
+#             # 5. Relative Strength
+#             if len(stock['Close']) >= 252 and len(sp500['Close']) >= 252:
+#                 stock_ratio = float(stock['Close'].iloc[-1]) / float(stock['Close'].iloc[-252])
+#                 sp500_ratio = float(sp500['Close'].iloc[-1]) / float(sp500['Close'].iloc[-252])
+#                 relative_strength = stock_ratio / sp500_ratio
+#             else:
+#                 relative_strength = 1.0
+            
+#             # Generate investment decision
+#             conditions = [
+#                 (relative_strength > 1.2) and (current_rsi < 60),
+#                 (relative_strength < 0.8) and (current_rsi > 70),
+#                 (stock_annual_return > sp500_annual_return + 0.05) and (stock_sharpe > 1),
+#                 (max_drawdown < -0.30) and (current_rsi > 65),
+#                 (stock_sharpe < 0.5) and (stock_annual_return < sp500_annual_return)
+#             ]
+            
+#             decisions = [
+#                 "STRONG BUY: Outperforming market with reasonable valuation",
+#                 "SELL: Underperforming and overbought",
+#                 "BUY: Consistent outperformer with good risk-adjusted returns",
+#                 "CAUTION: High historical volatility and currently overbought",
+#                 "AVOID: Poor risk-adjusted returns compared to market"
+#             ]
+            
+#             decision = "HOLD: Neutral position relative to market"
+#             for condition, dec in zip(conditions, decisions):
+#                 if condition:
+#                     decision = dec
+#                     break
+            
+#             # Display metrics in columns
+#             col1, col2 = st.columns(2)
+            
+#             with col1:
+#                 st.metric("5-Year Annualized Return", 
+#                          f"{stock_annual_return*100:.1f}%", 
+#                          delta=f"{stock_annual_return*100 - sp500_annual_return*100:.1f}% vs S&P 500")
+                
+#                 st.metric("Risk-Adjusted Return (Sharpe)", 
+#                          f"{stock_sharpe:.2f}", 
+#                          delta=f"{stock_sharpe - sp500_sharpe:.2f} vs S&P 500")
+                
+#                 st.metric("Maximum Drawdown", f"{max_drawdown*100:.1f}%")
+            
+#             with col2:
+#                 st.metric("Current RSI (14-day)", f"{current_rsi:.1f}",
+#                          delta="Overbought (>70)" if current_rsi > 70 else 
+#                                "Oversold (<30)" if current_rsi < 30 else "Neutral")
+                
+#                 st.metric("1-Year Relative Strength", f"{relative_strength:.2f}",
+#                          delta="Outperforming (>1)" if relative_strength > 1 else "Underperforming")
+                
+            
+#             # Plot comparison
+# #            st.subheader(f"5-Year Performance: {company} vs S&P 500")
+            
+#             # Normalize to percentage scale
+# #           norm_stock = (stock['Close'] / stock['Close'].iloc[0]) * 100
+# #           norm_sp500 = (sp500['Close'] / sp500['Close'].iloc[0]) * 100
+            
+# #            fig = go.Figure()
+            
+#             # Add stock trace
+# #            fig.add_trace(go.Scatter(
+# #                x=norm_stock.index,
+# #                y=norm_stock,
+# #                name=f"{company}",
+# #               line=dict(color='#1f77b4', width=2),
+# #                hovertemplate='%{x|%b %d, %Y}<br>%{y:.1f}%'
+# #            ))
+            
+#             # Add S&P 500 trace
+# #            fig.add_trace(go.Scatter(
+# #                x=norm_sp500.index,
+# #                y=norm_sp500,
+# #                name="S&P 500",
+# #                line=dict(color='#2ca02c', width=2, dash='dash'),
+# #                hovertemplate='%{x|%b %d, %Y}<br>%{y:.1f}%'
+# #            ))
+            
+# #            fig.update_layout(
+# #                height=500,
+# #                xaxis_title="Date",
+# #                yaxis_title="Normalized Performance (100 = Starting Value)",
+# #                legend=dict(
+# #                    orientation="h",
+# #                    yanchor="bottom",
+# #                    y=1.02,
+# #                    xanchor="right",
+# #                    x=1
+# #                ),
+#             #     hovermode="x unified",
+#             #     margin=dict(l=20, r=20, t=40, b=20),
+#             #     plot_bgcolor='rgba(240,240,240,0.8)'
+#             # )
+            
+#             # # Add range slider
+#             # fig.update_xaxes(
+#             #     rangeslider_visible=True,
+#             #     rangeselector=dict(
+#             #         buttons=list([
+#             #             dict(count=1, label="1Y", step="year", stepmode="backward"),
+#             #             dict(count=3, label="3Y", step="year", stepmode="backward"),
+#             #             dict(step="all", label="5Y")
+#             #         ])
+#             #     )
+#             # )
+            
+#             # st.plotly_chart(fig, use_container_width=True)
+            
+#         except Exception as e:
+#             st.error(f"Error in S&P 500 comparison analysis: {str(e)}")
+
+
+
+def run_sp500_comparison_analysis(df, company):
     """Run complete S&P 500 comparison analysis for the dashboard"""
     st.subheader("📊 S&P 500 Comparative Analysis (5 Years)")
     
@@ -955,6 +1119,11 @@ def run_sp500_comparison_analysis(df,company):
             data = {}
             data['sp500'] = yf.download("^GSPC", start=start_date, end=end_date)
             data[ticker] = yf.download(ticker, start=start_date, end=end_date)
+            
+            # Verify we got valid data
+            if data['sp500'] is None or data[ticker] is None:
+                st.error("Failed to fetch stock data")
+                return
             
             # Calculate daily returns
             data[ticker]['Daily_Return'] = data[ticker]['Close'].pct_change()
@@ -981,10 +1150,15 @@ def run_sp500_comparison_analysis(df,company):
             drawdown = (cumulative - peak) / peak
             max_drawdown = drawdown.min()
             
-            # 4. Current Technicals - RSI
-            close_prices = stock['Close'].values.flatten()
-            rsi_values = RSI(close_prices, timeperiod=14)
-            current_rsi = rsi_values[-1] if len(rsi_values) > 0 else 50.0
+            # 4. Current Technicals - RSI (using pandas-ta)
+            import pandas_ta as ta
+            rsi_values = ta.rsi(stock['Close'], length=14)
+            
+            # Handle potential None return from RSI calculation
+            if rsi_values is None or len(rsi_values) == 0:
+                current_rsi = 50.0  # Default neutral value
+            else:
+                current_rsi = rsi_values.iloc[-1]
             
             # 5. Relative Strength
             if len(stock['Close']) >= 252 and len(sp500['Close']) >= 252:
@@ -1040,143 +1214,10 @@ def run_sp500_comparison_analysis(df,company):
                          delta="Outperforming (>1)" if relative_strength > 1 else "Underperforming")
                 
                 st.metric("Investment Decision", decision, delta="Recommendation")
-            
-            # Plot comparison
-#            st.subheader(f"5-Year Performance: {company} vs S&P 500")
-            
-            # Normalize to percentage scale
-#           norm_stock = (stock['Close'] / stock['Close'].iloc[0]) * 100
-#           norm_sp500 = (sp500['Close'] / sp500['Close'].iloc[0]) * 100
-            
-#            fig = go.Figure()
-            
-            # Add stock trace
-#            fig.add_trace(go.Scatter(
-#                x=norm_stock.index,
-#                y=norm_stock,
-#                name=f"{company}",
-#               line=dict(color='#1f77b4', width=2),
-#                hovertemplate='%{x|%b %d, %Y}<br>%{y:.1f}%'
-#            ))
-            
-            # Add S&P 500 trace
-#            fig.add_trace(go.Scatter(
-#                x=norm_sp500.index,
-#                y=norm_sp500,
-#                name="S&P 500",
-#                line=dict(color='#2ca02c', width=2, dash='dash'),
-#                hovertemplate='%{x|%b %d, %Y}<br>%{y:.1f}%'
-#            ))
-            
-#            fig.update_layout(
-#                height=500,
-#                xaxis_title="Date",
-#                yaxis_title="Normalized Performance (100 = Starting Value)",
-#                legend=dict(
-#                    orientation="h",
-#                    yanchor="bottom",
-#                    y=1.02,
-#                    xanchor="right",
-#                    x=1
-#                ),
-            #     hovermode="x unified",
-            #     margin=dict(l=20, r=20, t=40, b=20),
-            #     plot_bgcolor='rgba(240,240,240,0.8)'
-            # )
-            
-            # # Add range slider
-            # fig.update_xaxes(
-            #     rangeslider_visible=True,
-            #     rangeselector=dict(
-            #         buttons=list([
-            #             dict(count=1, label="1Y", step="year", stepmode="backward"),
-            #             dict(count=3, label="3Y", step="year", stepmode="backward"),
-            #             dict(step="all", label="5Y")
-            #         ])
-            #     )
-            # )
-            
-            # st.plotly_chart(fig, use_container_width=True)
-            
+
         except Exception as e:
-            st.error(f"Error in S&P 500 comparison analysis: {str(e)}")
-
-
-
-# def run_sp500_comparison_analysis(df, company):
-#     """Display S&P 500 comparison with custom graph and metrics"""
-#     st.subheader("📊 S&P 500 Comparative Analysis (5 Years)")
-    
-#     # --- Part 1: Display Your Custom Graph ---
-#     try:
-#         if company == "Apple":
-#             img_path = "C:/Users/Dell/Dissertation_market_value/Apple_image/Apple_sp500.png"
-#         else:
-#             img_path = "C:/Users/Dell/Dissertation_market_value/Google_image/Google_sp500.png"
-        
-#         st.image(img_path, 
-#                 caption=f"{company} vs S&P 500 (2019-2024)",
-#                 use_column_width=True)
-#     except Exception as e:
-#         st.warning(f"Could not display graph: {str(e)}")
-    
-#     # --- Part 2: Calculate and Display Metrics ---
-#     ticker = 'AAPL' if company == "Apple" else 'GOOGL'
-#     end_date = datetime(2024, 12, 31)
-#     start_date = end_date - timedelta(days=5*365)  # Exactly 5 years
-    
-#     try:
-#         # Fetch data safely
-#         stock = yf.download(ticker, start=start_date, end=end_date, progress=False)
-#         sp500 = yf.download("^GSPC", start=start_date, end=end_date, progress=False)
-        
-#         # Verify we got data
-#         if stock.empty or sp500.empty:
-#             st.error("No data available for the selected period")
-#             return
-        
-#         # Get scalar values for calculations
-#         stock_first = float(stock['Close'].iloc[0])
-#         stock_last = float(stock['Close'].iloc[-1])
-#         sp500_first = float(sp500['Close'].iloc[0])
-#         sp500_last = float(sp500['Close'].iloc[-1])
-        
-#         # Calculate returns
-#         stock_return = (stock_last / stock_first) - 1
-#         sp500_return = (sp500_last / sp500_first) - 1
-        
-#         # Annualize returns
-#         stock_annualized = ((1 + stock_return) ** (1/5)) - 1
-#         sp500_annualized = ((1 + sp500_return) ** (1/5)) - 1
-        
-#         # Calculate relative strength (1Y)
-#         if len(stock) >= 252 and len(sp500) >= 252:
-#             stock_1y_first = float(stock['Close'].iloc[-252])
-#             sp500_1y_first = float(sp500['Close'].iloc[-252])
-#             rel_strength = (stock_last/stock_1y_first) / (sp500_last/sp500_1y_first)
-#         else:
-#             rel_strength = 1.0
-        
-#         # --- Display Metrics ---
-#         st.markdown("**Performance Metrics**")
-        
-#         col1, col2 = st.columns(2)
-#         with col1:
-#             st.metric(f"{company} Total Return", 
-#                      f"{stock_return*100:.1f}%",
-#                      delta=f"Annualized: {stock_annualized*100:.1f}%/yr")
-            
-#         with col2:
-#             st.metric("S&P 500 Total Return",
-#                      f"{sp500_return*100:.1f}%",
-#                      delta=f"Annualized: {sp500_annualized*100:.1f}%/yr")
-        
-#         st.metric("Relative Strength (1Y)",
-#                  f"{rel_strength:.2f}",
-#                  "Outperforming" if rel_strength > 1 else "Underperforming")
-        
-#     except Exception as e:
-#         st.error(f"Error calculating metrics: {str(e)}")
+            st.error(f"An error occurred during S&P 500 comparison analysis: {str(e)}")
+            return
 # Function to run behavioral analysis
 def run_behavioral_analysis(df, company):
     st.header("📊 Behavioral Analysis")
