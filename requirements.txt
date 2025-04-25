@@ -9,5 +9,5 @@ yfinancebeautifulsoup4
 requests
 nltk
 plotly
-
+pandas_ta==0.3.14b0
 
